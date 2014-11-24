@@ -1,0 +1,103 @@
+---
+title: "Coursera's Regression Models Course - Course Project"
+author: "Diogenes A. R. Justo"
+date: "Sunday, November 23, 2014"
+output: html_document
+---
+
+This is the course project activity to Coursera's Course titled "Regression Models". The goal in this project is to use mtcars data to analysis - using regressions models - two questions:
+- Is an automatic or manual transmission better for MPG;
+- Quantify the MPG difference between automatic and manual transmissions.
+
+Specific orientations:
+- The report must be written as a PDF output from r-markdown;
+- Two pages os less for main text. Figures can be used as appendix up to 5 pages;
+- First paragraph of executive summary.
+
+##Executive Summary
+We had conducted one study about influences of some information of a 32 models cars set, in gas consuming. We had data from number of cylinders, displacement, gross horsepower, rear axle ratio, weight, 1/4 mile time, transmission type, number of gears and number of carburetors. 
+Our conclusions let us to say that the cars with less cylinders and weight can be strong economic. Also, automatic transmission cars, althogth is more comfortable, needs more gas than cars with manual transmission. 
+
+##1. Data exploration
+First we take a look of data by head and summary commands.
+```{r, echo=TRUE}
+head(mtcars)
+summary(mtcars)
+```
+
+From head results we can see that except by car names, all other data is numeric (that could be used in regression models). May be some numeric factors (like gear). Also, looking summary we can conclude that data is complete, with no NA's, and for this reason data cleaning is not needed.
+
+Another good visual exploration is done by using pairs command, with graphically comparision for each two variables.
+```{r, echo=TRUE}
+print(pairs(mtcars))
+```
+
+Visually we observe that cyl, disp, hp, drat and wt have some correlation with MPG.
+
+##2. Models analyses
+By the way, using visual insight, we will take first models using that fields.
+
+```{r, echo=TRUE}
+m1 <- lm(mpg ~ cyl+disp+hp+drat+wt, data=mtcars)
+summary(m1)
+```
+
+Multiple R-squared for this model is in good shape: 0.8513, with p-value very low. So, we started with good results.
+
+Another try could be include gear like predictor. Let see:
+```{r, echo=TRUE}
+m2 <- lm(mpg ~ cyl+disp+hp+drat+wt+gear, data=mtcars)
+summary(m2)
+```
+
+Multiple R-squared for this model is more than first on: 0.8524, with p-value very low. We reached a little bit better model. 
+
+Automatic transmission is well knew to take more gas consume. Let see what if we include more this predictor.
+```{r, echo=TRUE}
+m3 <- lm(mpg ~ cyl+disp+hp+drat+wt+gear+am, data=mtcars)
+summary(m3)
+```
+
+Again we improved the model: multiple R-squared for this model: 0.8558, still p-value very low. 
+
+And... what about include all variables to predict?
+```{r, echo=TRUE}
+m4 <- lm(mpg ~ ., data=mtcars)
+summary(m4)
+```
+
+This is the better model: multiple R-squared reached 0.869. 
+
+##3. Model Improve 
+
+First one, we will take a look of residuals.
+
+###3.1 Residual analyses
+
+Plotting residuals is a good tool to verify distances from real point, and predict point.  
+```{r, echo=TRUE}
+print(plot(m4$residuals))
+```
+
+There are 3 points out of a range of -3 +3 error: 17th, 18th and 20th. This 3 I will treat like outliers and made a new classifier (predictor). We are going to set 1 to this points, and 0 for others. After this, we bind new predictor to original dataset, generating a new model.
+
+```{r, echo=TRUE}
+ol <- rep(0,32)
+ol[17]<-ol[18]<-ol[20]<-1
+mtcars2 <- cbind(mtcars,ol)
+m5 <- lm(mpg ~ ., data=mtcars2)
+summary(m5)
+```
+
+Gotcha! (R-multiple squared=0.945)
+
+###3.2 Coeficient Interpretation
+This model say us that some variables have a great contribution to mpg:
+- For each cylinder less, mpg is decreased by 0.46;
+- For each gear more, mpg is increased by 1.26;
+- and, for each 1000lb (pounds) more, mpg is decreased by 5.18.
+
+Disp and hp have a little insignificant contribution to mpg variation.
+
+###4. Conclusions
+Of course that a regression model analysis take a look from data. Some results can be biased by quantity of observations. This is not a representation of some population of cars, just a view of some comparision of some cars.
